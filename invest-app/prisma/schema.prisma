@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int           @id @default(autoincrement())
+  email     String        @unique
+  password  String
+  name      String?
+  createdAt DateTime      @default(now())
+  orders    Transaction[]
+  watchlist Watchlist[]
+}
+
+model Asset {
+  id           Int           @id @default(autoincrement())
+  symbol       String        @unique
+  name         String?
+  transactions Transaction[]
+}
+
+model Transaction {
+  id       Int      @id @default(autoincrement())
+  type     String // BUY, SELL, DIVIDEND
+  quantity Float // Support fractional shares if needed, otherwise Int
+  price    Float // Unit price
+  brokerage Float? @default(0) // Custo de Corretagem (CUS.T)
+  otherFees Float? @default(0) // Outras taxas (RAT)
+  total    Float // Total value of transaction (helper)
+  date     DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  assetId Int
+  asset   Asset @relation(fields: [assetId], references: [id])
+}
+
+model Watchlist {
+  id        Int      @id @default(autoincrement())
+  symbol    String
+  target    Float    // Alvo value
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, symbol])
+}
